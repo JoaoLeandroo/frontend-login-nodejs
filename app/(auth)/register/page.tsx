@@ -1,11 +1,52 @@
+"use client"
+
 import Link from "next/link";
 import Container from "@/components/Container";
+import { api } from "@/services/api";
+import { FormEvent, useState } from "react";
 
-const pageRegister = () => {
+const PageRegister = () => {
+    const [nameUser, setNameUser] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
+    const [password1, setPassword1] = useState<string>("")
+
+    const handleRegisterUser = async (event: FormEvent) => {
+        event.preventDefault()
+
+        if(nameUser === "" || password === "" || password1 === "") {
+            return alert("Preencha todos os campos.")
+        }
+        if(nameUser.length < 3) return alert("Insira um nome valido")
+        if(password != password1) return alert("As senhas precisam ser iguais")
+        
+            try {
+            const check = await api.post("/check-user", {
+                name: nameUser,
+            })
+
+            if(check.data.message === "Usuario já registrado!") {
+                return alert("Usuario já cadastrado.")
+            }
+            
+            const response = await api.post("/register", {
+                name: nameUser,
+                password: password,
+            })
+            
+            alert("Usuario registrado com sucesso")
+            return response
+    
+        }catch(err) {
+            return alert("Ops, algo deu errado.")
+        }
+    }
+
     return ( 
         <Container>
             <div className="flex items-center justify-center w-full min-h-screen">
-                <form className="max-w-[400px] w-full flex flex-col p-5">
+                <form 
+                    onSubmit={handleRegisterUser}
+                    className="max-w-[400px] w-full flex flex-col p-5">
                     <div className="w-full text-center">
                         <p className="text-2xl font-bold mb-5">Cadastre-se</p>
                     </div>
@@ -18,6 +59,7 @@ const pageRegister = () => {
                                 name="name" 
                                 className="input input-bordered input-success w-full" 
                                 placeholder="Informe um nome único"
+                                onChange={(e) => setNameUser(e.target.value)}
                             />
                         </div>
 
@@ -29,6 +71,7 @@ const pageRegister = () => {
                                 name="password" 
                                 className="input input-bordered input-success w-full" 
                                 placeholder="Insira uma senha"
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-col gap-y-1 mt-2">
@@ -39,11 +82,12 @@ const pageRegister = () => {
                                 name="repeat-password" 
                                 className="input input-bordered input-success w-full" 
                                 placeholder="Repita sua senha"
+                                onChange={(e) => setPassword1(e.target.value)}
                             />
                         </div>
                     </div>
                     <div>
-                        <button className="btn btn-success w-full mt-5 text-zinc-200 uppercase mb-2">Registre-se</button>
+                        <button type="submit" className="btn btn-success w-full mt-5 text-zinc-200 uppercase mb-2">Registre-se</button>
                         <div className="w-full text-center">
                             <p className="text-sm">Já possui conta? <Link href={"/session"} className="text-blue-500">Faça login</Link></p>
                         </div>
@@ -54,4 +98,4 @@ const pageRegister = () => {
      );
 }
  
-export default pageRegister;
+export default PageRegister;
