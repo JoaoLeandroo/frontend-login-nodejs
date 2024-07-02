@@ -4,28 +4,47 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import { api } from "@/services/api";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { registerSchema } from "@/services/zod";
 
 const PageRegister = () => {
+    const router = useRouter()
+
     const [nameUser, setNameUser] = useState<string>("")
     const [password, setPassword] = useState<string>("")
     const [password1, setPassword1] = useState<string>("")
+    const [errors, setErrors] = useState<any>({})
+    const [success, setSuccess] = useState<boolean>(false)
 
     const handleRegisterUser = async (event: FormEvent) => {
         event.preventDefault()
 
-        if(nameUser === "" || password === "" || password1 === "") {
-            return alert("Preencha todos os campos.")
+        const parseResult = registerSchema.safeParse({nameUser, password, password1})
+        if (!parseResult.success) {
+            setErrors(parseResult.error.flatten().fieldErrors)
+            return
         }
-        if(nameUser.length < 3) return alert("Insira um nome valido")
-        if(password != password1) return alert("As senhas precisam ser iguais")
-        
+        setErrors({})
             try {
             const check = await api.post("/check-user", {
                 name: nameUser,
             })
 
             if(check.data.message === "Usuario já registrado!") {
-                return alert("Usuario já cadastrado.")
+                setErrors((prevState:any) => ({
+                    ...prevState,
+                    nameUser: ["Usuario já cadastrado."]
+                }))
+                return console.log("Usuario já cadastrado.")
+            }
+
+            if(password != password1) {
+                setErrors((prevState:any) => ({
+                    ...prevState,
+                    password: ["As senhas devem ser iguais."],
+                    password1: ["As senhas devem ser iguais."]
+                }))
+                return
             }
             
             const response = await api.post("/register", {
@@ -33,17 +52,41 @@ const PageRegister = () => {
                 password: password,
             })
             
-            alert("Usuario registrado com sucesso")
+            setSuccess(true)
+            await new Promise((resolve) => setTimeout(resolve, 5000))
+            setSuccess(false)
+            router.push("/session")
             return response
     
         }catch(err) {
-            return alert("Ops, algo deu errado.")
+            return {message: err}
         }
     }
 
     return ( 
         <Container>
-            <div className="flex items-center justify-center w-full min-h-screen">
+            <div className="flex items-center justify-center w-full min-h-screen relative">
+            {
+                success ? 
+                    <div role="alert" className="alert alert-success absolute top-10 animate-bounce">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 shrink-0 stroke-current"
+                            fill="none"
+                            viewBox="0 0 24 24">
+                            <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Usuario cadastrado com sucesso!</span>
+                        <p>Redirecionando...</p>
+                    </div> 
+                  :
+                ""
+            }
+
                 <form 
                     onSubmit={handleRegisterUser}
                     className="max-w-[400px] w-full flex flex-col p-5">
@@ -61,6 +104,7 @@ const PageRegister = () => {
                                 placeholder="Informe um nome único"
                                 onChange={(e) => setNameUser(e.target.value)}
                             />
+                            {errors.nameUser && <p className="text-red-500 text-sm">{errors.nameUser[0]}</p>}
                         </div>
 
                         <div className="flex flex-col gap-y-1 mt-2">
@@ -73,6 +117,7 @@ const PageRegister = () => {
                                 placeholder="Insira uma senha"
                                 onChange={(e) => setPassword(e.target.value)}
                             />
+                            {errors.password && <p className="text-red-500 text-sm">{errors.password[0]}</p>}
                         </div>
                         <div className="flex flex-col gap-y-1 mt-2">
                             <label htmlFor="repeat-password" className="text-sm">Repeat password</label>
@@ -84,10 +129,13 @@ const PageRegister = () => {
                                 placeholder="Repita sua senha"
                                 onChange={(e) => setPassword1(e.target.value)}
                             />
+                            {errors.password1 && <p className="text-red-500 text-sm">{errors.password1[0]}</p>}
                         </div>
                     </div>
                     <div>
-                        <button type="submit" className="btn btn-success w-full mt-5 text-zinc-200 uppercase mb-2">Registre-se</button>
+                        <button type="submit" className="btn btn-success w-full mt-5 text-zinc-200 uppercase mb-2">
+                           Registre-se
+                        </button>
                         <div className="w-full text-center">
                             <p className="text-sm">Já possui conta? <Link href={"/session"} className="text-blue-500">Faça login</Link></p>
                         </div>
