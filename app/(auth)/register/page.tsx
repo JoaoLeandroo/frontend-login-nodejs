@@ -53,7 +53,7 @@ const PageRegister = () => {
             })
             
             setSuccess(true)
-            await new Promise((resolve) => setTimeout(resolve, 5000))
+            await new Promise((resolve) => setTimeout(resolve, 2000))
             setSuccess(false)
             router.push("/session")
             return response

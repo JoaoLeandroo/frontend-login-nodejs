@@ -1,11 +1,32 @@
+"use client"
+
 import Link from "next/link";
 import Container from "@/components/Container";
+import { FormEvent, useState } from "react";
+import { api } from "@/services/api";
 
 const PageSession = () => {
+
+    const [login, setLogin] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
+    
+    const handleLogin = async (event: FormEvent) => {
+        event.preventDefault()
+        if(login === "" || password === "") return alert("Preencha todos os campos.")
+
+        const check = await api.post("/session", {
+            name: login,
+            password: password,
+        })
+        if(check.data?.Error?.message === "Usuario ou senha inválido.") return alert("Usuario ou senha invalidos.")
+
+        console.log(check?.data)
+    }
+
     return ( 
         <Container>
             <div className="flex items-center justify-center w-full min-h-screen">
-                <form className="max-w-[400px] w-full flex flex-col p-5">
+                <form className="max-w-[400px] w-full flex flex-col p-5" onSubmit={handleLogin}>
                     <div className="w-full text-center">
                         <p className="text-2xl font-bold mb-5">Acesse sua conta</p>
                     </div>
@@ -17,7 +38,8 @@ const PageSession = () => {
                                 id="name" 
                                 name="name" 
                                 className="input input-bordered input-success w-full" 
-                                placeholder="Informe um nome único"
+                                placeholder="Informe o nome cadastrado"
+                                onChange={(e) => setLogin(e.target.value)}
                             />
                         </div>
 
@@ -28,12 +50,13 @@ const PageSession = () => {
                                 id="password" 
                                 name="password" 
                                 className="input input-bordered input-success w-full" 
-                                placeholder="Insira uma senha"
+                                placeholder="Insira sua senha"
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                     </div>
                     <div>
-                        <button className="btn btn-success w-full mt-5 mb-2 text-zinc-200 uppercase">Login</button>
+                        <button type="submit" className="btn btn-success w-full mt-5 mb-2 text-zinc-200 uppercase">Login</button>
                         <div className="w-full text-center">
                             <p className="text-sm">Não possui conta? <Link href={"/register"} className="text-blue-500">Registre-se</Link></p>
                         </div>
