@@ -4,21 +4,39 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import { FormEvent, useState } from "react";
 import { api } from "@/services/api";
+import { sessionSchema } from "@/services/zod";
 
 const PageSession = () => {
 
     const [login, setLogin] = useState<string>("")
     const [password, setPassword] = useState<string>("")
+    const [errors, setErrors] = useState<any>({})
     
     const handleLogin = async (event: FormEvent) => {
         event.preventDefault()
+
+        const parseResult = sessionSchema.safeParse({login, password})
+        if(!parseResult.success) {
+            setErrors(parseResult.error.flatten().fieldErrors)
+            return
+        }
+
         if(login === "" || password === "") return alert("Preencha todos os campos.")
 
         const check = await api.post("/session", {
             name: login,
             password: password,
         })
-        if(check.data?.Error?.message === "Usuario ou senha inválido.") return alert("Usuario ou senha invalidos.")
+
+        if(check.data?.Error?.message === "Usuario ou senha inválido.") {
+            setErrors((prevState: any) => ({
+                ...prevState,
+                login: ["Login ou senha inválido"],
+                password: ["Login ou senha inválido."]
+            }))
+
+            return
+        }
 
         console.log(check?.data)
     }
@@ -41,6 +59,7 @@ const PageSession = () => {
                                 placeholder="Informe o nome cadastrado"
                                 onChange={(e) => setLogin(e.target.value)}
                             />
+                            {errors.login && <p className="text-red-500 text-sm">{errors.login[0]}</p>}
                         </div>
 
                         <div className="flex flex-col gap-y-1 mt-2">
@@ -53,6 +72,7 @@ const PageSession = () => {
                                 placeholder="Insira sua senha"
                                 onChange={(e) => setPassword(e.target.value)}
                             />
+                            {errors.password && <p className="text-red-500 text-sm">{errors.password[0]}</p>}
                         </div>
                     </div>
                     <div>
