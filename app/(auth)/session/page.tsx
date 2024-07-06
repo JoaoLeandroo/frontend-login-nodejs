@@ -5,8 +5,12 @@ import Container from "@/components/Container";
 import { FormEvent, useState } from "react";
 import { api } from "@/services/api";
 import { sessionSchema } from "@/services/zod";
+import { setCookie } from "nookies";
+import { useRouter } from "next/navigation";
 
 const PageSession = () => {
+
+    const router = useRouter()
 
     const [login, setLogin] = useState<string>("")
     const [password, setPassword] = useState<string>("")
@@ -38,7 +42,8 @@ const PageSession = () => {
             return
         }
 
-        console.log(check?.data)
+        setCookie(null, "@nextAuth.token", check.data?.token)
+        router.push("/dashboard")
     }
 
     return ( 
