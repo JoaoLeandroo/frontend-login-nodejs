@@ -67,12 +67,6 @@ const PageDashboard = () => {
           <div>
             <h1>Lista de Usuários</h1>
             <ul>
-              {/* {users.map(user => (
-                    <li key={user.id}>
-                        {user.name} - {user.createAt}
-                    </li>
-                ))} */}
-
               {users.map((user: any) => (
                 <li key={user.id} className="text-white font-bold text-lg">
                   {user.name}
